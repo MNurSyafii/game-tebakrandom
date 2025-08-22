@@ -1,0 +1,669 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Game Tebak-Tebakan Interaktif</title>
+    <style>
+        /* Import Google Font yang playful */
+        @import url('https://fonts.googleapis.com/css2?family=Fredoka+One:wght@400&family=Nunito:wght@400;600;700&display=swap');
+        
+        /* Reset dan setup dasar */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Nunito', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: white;
+        }
+        
+        /* Container utama game */
+        .game-container {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 30px;
+            max-width: 600px;
+            width: 90%;
+            text-align: center;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        /* Judul game */
+        .game-title {
+            font-family: 'Fredoka One', cursive;
+            font-size: 2.5em;
+            margin-bottom: 20px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+        
+        /* Info level dan skor */
+        .game-info {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            font-weight: 600;
+            font-size: 1.1em;
+        }
+        
+        .level-indicator {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 8px 16px;
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+        
+        /* Timer countdown */
+        .timer {
+            font-size: 2em;
+            font-weight: 700;
+            color: #ff6b6b;
+            margin-bottom: 20px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+        
+        /* Area pertanyaan */
+        .question-area {
+            background: rgba(255, 255, 255, 0.15);
+            padding: 25px;
+            border-radius: 15px;
+            margin-bottom: 25px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .question {
+            font-size: 1.3em;
+            font-weight: 600;
+            line-height: 1.4;
+        }
+        
+        /* Input dan tombol */
+        .answer-section {
+            margin-bottom: 20px;
+        }
+        
+        .answer-input {
+            width: 70%;
+            padding: 12px 20px;
+            font-size: 1.1em;
+            border: none;
+            border-radius: 25px;
+            margin-right: 10px;
+            text-align: center;
+            outline: none;
+            background: rgba(255, 255, 255, 0.9);
+            color: #333;
+        }
+        
+        .answer-input:focus {
+            box-shadow: 0 0 15px rgba(255, 255, 255, 0.5);
+            transform: scale(1.02);
+            transition: all 0.3s ease;
+        }
+        
+        /* Styling tombol */
+        .btn {
+            background: linear-gradient(45deg, #ff6b6b, #ff8e8e);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            font-size: 1.1em;
+            font-weight: 600;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+            background: linear-gradient(45deg, #ff5252, #ff7979);
+        }
+        
+        .btn:active {
+            transform: translateY(0);
+        }
+        
+        .btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        /* Feedback animasi */
+        .feedback {
+            font-size: 2em;
+            font-weight: 700;
+            margin: 20px 0;
+            opacity: 0;
+            transform: scale(0.5);
+            transition: all 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        }
+        
+        .feedback.show {
+            opacity: 1;
+            transform: scale(1);
+        }
+        
+        .feedback.correct {
+            color: #4ecdc4;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+        
+        .feedback.wrong {
+            color: #ff6b6b;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+        
+        /* Efek confetti */
+        .confetti {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background: #f0f;
+            animation: confetti-fall 3s linear forwards;
+        }
+        
+        @keyframes confetti-fall {
+            0% {
+                transform: translateY(-100vh) rotate(0deg);
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(100vh) rotate(720deg);
+                opacity: 0;
+            }
+        }
+        
+        /* Progress bar */
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 10px;
+            overflow: hidden;
+            margin-bottom: 20px;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(45deg, #4ecdc4, #44a08d);
+            width: 0%;
+            transition: width 0.5s ease;
+        }
+        
+        /* Layar hasil akhir */
+        .final-screen {
+            display: none;
+        }
+        
+        .final-score {
+            font-size: 3em;
+            font-family: 'Fredoka One', cursive;
+            margin: 20px 0;
+        }
+        
+        .motivation-message {
+            font-size: 1.2em;
+            margin: 20px 0;
+            font-weight: 600;
+        }
+        
+        /* Responsive design */
+        @media (max-width: 768px) {
+            .game-container {
+                padding: 20px;
+            }
+            
+            .game-title {
+                font-size: 2em;
+            }
+            
+            .answer-input {
+                width: 100%;
+                margin-bottom: 15px;
+                margin-right: 0;
+            }
+            
+            .game-info {
+                flex-direction: column;
+                gap: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Container utama game -->
+    <div class="game-container">
+        <!-- Layar game utama -->
+        <div id="gameScreen">
+            <h1 class="game-title">🧠 Tebak-Tebakan Seru! 🎯</h1>
+            
+            <!-- Info level dan skor -->
+            <div class="game-info">
+                <div class="level-indicator">Level: <span id="currentLevel">1</span></div>
+                <div>Pertanyaan: <span id="questionNumber">1</span>/5</div>
+                <div>Skor: <span id="score">0</span></div>
+            </div>
+            
+            <!-- Progress bar -->
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressFill"></div>
+            </div>
+            
+            <!-- Timer countdown -->
+            <div class="timer" id="timer">10</div>
+            
+            <!-- Area pertanyaan -->
+            <div class="question-area">
+                <div class="question" id="questionText">Siap untuk memulai petualangan tebak-tebakan?</div>
+            </div>
+            
+            <!-- Input jawaban dan tombol -->
+            <div class="answer-section">
+                <input type="text" class="answer-input" id="answerInput" placeholder="Ketik jawabanmu di sini..." disabled>
+                <button class="btn" id="checkBtn" onclick="checkAnswer()">🔍 Cek Jawaban</button>
+            </div>
+            
+            <!-- Feedback animasi -->
+            <div class="feedback" id="feedback"></div>
+            
+            <!-- Tombol mulai/lanjut -->
+            <button class="btn" id="startBtn" onclick="startGame()" style="background: linear-gradient(45deg, #4ecdc4, #44a08d);">🚀 Mulai Game</button>
+            <button class="btn" id="nextBtn" onclick="nextQuestion()" style="display: none; background: linear-gradient(45deg, #4ecdc4, #44a08d);">➡️ Pertanyaan Selanjutnya</button>
+        </div>
+        
+        <!-- Layar hasil akhir -->
+        <div id="finalScreen" class="final-screen">
+            <h1 class="game-title">🎊 Selesai! 🎊</h1>
+            <div class="final-score" id="finalScore">0/5</div>
+            <div class="motivation-message" id="motivationMessage"></div>
+            <button class="btn" onclick="restartGame()" style="background: linear-gradient(45deg, #4ecdc4, #44a08d);">🔄 Main Lagi</button>
+        </div>
+    </div>
+
+    <script>
+        // ========== KONFIGURASI GAME ==========
+        
+        // Database pertanyaan berdasarkan level
+        const questions = {
+            1: [ // Level Mudah
+                {q: "Siapa nama presiden pertama Indonesia?", a: "soekarno"},
+                {q: "Berapa jumlah kaki laba-laba?", a: "8"},
+                {q: "Apa warna yang dihasilkan dari campuran merah dan kuning?", a: "orange"},
+                {q: "Planet terdekat dengan matahari?", a: "merkurius"},
+                {q: "Berapa hari dalam seminggu?", a: "7"},
+                {q: "Hewan apa yang disebut raja hutan?", a: "singa"},
+                {q: "Apa ibu kota Indonesia?", a: "jakarta"},
+                {q: "Berapa jumlah mata manusia normal?", a: "2"}
+            ],
+            2: [ // Level Sedang
+                {q: "Siapa penemu bola lampu?", a: "thomas edison"},
+                {q: "Berapa benua di dunia?", a: "7"},
+                {q: "Apa nama satelit alami bumi?", a: "bulan"},
+                {q: "Dalam sistem tata surya, planet apa yang terbesar?", a: "jupiter"},
+                {q: "Berapa jumlah provinsi di Indonesia saat ini?", a: "38"},
+                {q: "Apa nama mata uang Jepang?", a: "yen"},
+                {q: "Siapa penulis novel Laskar Pelangi?", a: "andrea hirata"},
+                {q: "Berapa hasil dari 8 x 7?", a: "56"}
+            ],
+            3: [ // Level Sulit
+                {q: "Apa nama unsur kimia dengan simbol Au?", a: "emas"},
+                {q: "Berapa kecepatan cahaya dalam vakum (dalam km/s)?", a: "300000"},
+                {q: "Siapa ilmuwan yang merumuskan teori relativitas?", a: "einstein"},
+                {q: "Apa nama proses fotosintesis pada tumbuhan?", a: "fotosintesis"},
+                {q: "Berapa jumlah tulang pada tubuh manusia dewasa?", a: "206"},
+                {q: "Apa nama ibukota Australia?", a: "canberra"},
+                {q: "Siapa komposer yang menciptakan simfoni 'Für Elise'?", a: "beethoven"},
+                {q: "Berapa nilai phi (π) hingga 2 desimal?", a: "3.14"}
+            ]
+        };
+        
+        // ========== VARIABEL GAME ==========
+        let currentLevel = 1;
+        let questionNumber = 1;
+        let score = 0;
+        let currentQuestion = null;
+        let timer = null;
+        let timeLeft = 10;
+        let gameActive = false;
+        let usedQuestions = [];
+        
+        // ========== ELEMEN DOM ==========
+        const elements = {
+            currentLevel: document.getElementById('currentLevel'),
+            questionNumber: document.getElementById('questionNumber'),
+            score: document.getElementById('score'),
+            progressFill: document.getElementById('progressFill'),
+            timer: document.getElementById('timer'),
+            questionText: document.getElementById('questionText'),
+            answerInput: document.getElementById('answerInput'),
+            checkBtn: document.getElementById('checkBtn'),
+            feedback: document.getElementById('feedback'),
+            startBtn: document.getElementById('startBtn'),
+            nextBtn: document.getElementById('nextBtn'),
+            gameScreen: document.getElementById('gameScreen'),
+            finalScreen: document.getElementById('finalScreen'),
+            finalScore: document.getElementById('finalScore'),
+            motivationMessage: document.getElementById('motivationMessage')
+        };
+        
+        // ========== FUNGSI EFEK SUARA ==========
+        // Membuat efek suara menggunakan Web Audio API
+        function playSound(type) {
+            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+            
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+            
+            if (type === 'correct') {
+                // Suara "benar" - nada tinggi dan ceria
+                oscillator.frequency.setValueAtTime(523.25, audioContext.currentTime); // C5
+                oscillator.frequency.setValueAtTime(659.25, audioContext.currentTime + 0.1); // E5
+                oscillator.frequency.setValueAtTime(783.99, audioContext.currentTime + 0.2); // G5
+            } else {
+                // Suara "salah" - nada rendah
+                oscillator.frequency.setValueAtTime(220, audioContext.currentTime); // A3
+                oscillator.frequency.setValueAtTime(196, audioContext.currentTime + 0.2); // G3
+            }
+            
+            gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3);
+            
+            oscillator.start(audioContext.currentTime);
+            oscillator.stop(audioContext.currentTime + 0.3);
+        }
+        
+        // ========== FUNGSI EFEK CONFETTI ==========
+        function createConfetti() {
+            const colors = ['#ff6b6b', '#4ecdc4', '#45b7d1', '#f9ca24', '#f0932b', '#eb4d4b', '#6c5ce7'];
+            
+            for (let i = 0; i < 30; i++) {
+                setTimeout(() => {
+                    const confetti = document.createElement('div');
+                    confetti.className = 'confetti';
+                    confetti.style.left = Math.random() * 100 + '%';
+                    confetti.style.backgroundColor = colors[Math.random() * colors.length | 0];
+                    confetti.style.animationDelay = Math.random() * 2 + 's';
+                    document.body.appendChild(confetti);
+                    
+                    // Hapus confetti setelah animasi selesai
+                    setTimeout(() => {
+                        confetti.remove();
+                    }, 3000);
+                }, i * 50);
+            }
+        }
+        
+        // ========== FUNGSI TIMER COUNTDOWN ==========
+        function startTimer() {
+            timeLeft = 10;
+            elements.timer.textContent = timeLeft;
+            elements.timer.style.color = '#4ecdc4';
+            
+            timer = setInterval(() => {
+                timeLeft--;
+                elements.timer.textContent = timeLeft;
+                
+                // Ubah warna timer saat waktu hampir habis
+                if (timeLeft <= 3) {
+                    elements.timer.style.color = '#ff6b6b';
+                    elements.timer.style.transform = 'scale(1.2)';
+                } else {
+                    elements.timer.style.transform = 'scale(1)';
+                }
+                
+                // Waktu habis
+                if (timeLeft <= 0) {
+                    clearInterval(timer);
+                    timeUp();
+                }
+            }, 1000);
+        }
+        
+        // ========== FUNGSI WAKTU HABIS ==========
+        function timeUp() {
+            gameActive = false;
+            elements.answerInput.disabled = true;
+            elements.checkBtn.disabled = true;
+            
+            // Tampilkan feedback waktu habis
+            showFeedback('⏰ Waktu Habis!', 'wrong');
+            playSound('wrong');
+            
+            // Tampilkan jawaban yang benar
+            setTimeout(() => {
+                showFeedback(`Jawaban: ${currentQuestion.a}`, 'wrong');
+            }, 1500);
+            
+            // Lanjut ke pertanyaan berikutnya
+            setTimeout(() => {
+                nextQuestion();
+            }, 3000);
+        }
+        
+        // ========== FUNGSI MEMILIH PERTANYAAN ACAK ==========
+        function getRandomQuestion() {
+            const levelQuestions = questions[currentLevel];
+            const availableQuestions = levelQuestions.filter((_, index) => 
+                !usedQuestions.includes(`${currentLevel}-${index}`)
+            );
+            
+            if (availableQuestions.length === 0) {
+                // Reset jika semua pertanyaan sudah dipakai
+                usedQuestions = [];
+                return levelQuestions[Math.floor(Math.random() * levelQuestions.length)];
+            }
+            
+            const randomIndex = Math.floor(Math.random() * availableQuestions.length);
+            const selectedQuestion = availableQuestions[randomIndex];
+            
+            // Tandai pertanyaan sebagai sudah digunakan
+            const originalIndex = levelQuestions.indexOf(selectedQuestion);
+            usedQuestions.push(`${currentLevel}-${originalIndex}`);
+            
+            return selectedQuestion;
+        }
+        
+        // ========== FUNGSI MEMULAI GAME ==========
+        function startGame() {
+            // Reset variabel game
+            currentLevel = 1;
+            questionNumber = 1;
+            score = 0;
+            usedQuestions = [];
+            
+            // Update UI
+            updateGameInfo();
+            
+            // Sembunyikan tombol start, tampilkan pertanyaan pertama
+            elements.startBtn.style.display = 'none';
+            loadQuestion();
+        }
+        
+        // ========== FUNGSI MEMUAT PERTANYAAN ==========
+        function loadQuestion() {
+            // Pilih pertanyaan acak
+            currentQuestion = getRandomQuestion();
+            
+            // Update UI
+            elements.questionText.textContent = currentQuestion.q;
+            elements.answerInput.value = '';
+            elements.answerInput.disabled = false;
+            elements.checkBtn.disabled = false;
+            elements.feedback.classList.remove('show');
+            elements.nextBtn.style.display = 'none';
+            
+            // Fokus ke input
+            elements.answerInput.focus();
+            
+            // Mulai timer
+            gameActive = true;
+            startTimer();
+            
+            // Update progress bar
+            const progress = (questionNumber - 1) * 20;
+            elements.progressFill.style.width = progress + '%';
+        }
+        
+        // ========== FUNGSI CEK JAWABAN ==========
+        function checkAnswer() {
+            if (!gameActive) return;
+            
+            const userAnswer = elements.answerInput.value.toLowerCase().trim();
+            const correctAnswer = currentQuestion.a.toLowerCase().trim();
+            
+            // Hentikan timer
+            clearInterval(timer);
+            gameActive = false;
+            elements.answerInput.disabled = true;
+            elements.checkBtn.disabled = true;
+            
+            // Cek jawaban
+            if (userAnswer === correctAnswer) {
+                // Jawaban benar
+                score++;
+                showFeedback('🎉 Benar!', 'correct');
+                playSound('correct');
+                createConfetti();
+            } else {
+                // Jawaban salah
+                showFeedback('❌ Salah!', 'wrong');
+                playSound('wrong');
+                
+                // Tampilkan jawaban yang benar
+                setTimeout(() => {
+                    showFeedback(`Jawaban: ${currentQuestion.a}`, 'wrong');
+                }, 1500);
+            }
+            
+            // Update skor
+            elements.score.textContent = score;
+            
+            // Lanjut ke pertanyaan berikutnya setelah delay
+            setTimeout(() => {
+                nextQuestion();
+            }, 3000);
+        }
+        
+        // ========== FUNGSI TAMPILKAN FEEDBACK ==========
+        function showFeedback(message, type) {
+            elements.feedback.textContent = message;
+            elements.feedback.className = `feedback ${type} show`;
+        }
+        
+        // ========== FUNGSI PERTANYAAN SELANJUTNYA ==========
+        function nextQuestion() {
+            questionNumber++;
+            
+            // Cek apakah masih ada pertanyaan
+            if (questionNumber <= 5) {
+                // Naik level setiap 2 pertanyaan (level 2 di pertanyaan 3, level 3 di pertanyaan 5)
+                if (questionNumber === 3) currentLevel = 2;
+                if (questionNumber === 5) currentLevel = 3;
+                
+                updateGameInfo();
+                loadQuestion();
+            } else {
+                // Game selesai
+                showFinalScreen();
+            }
+        }
+        
+        // ========== FUNGSI UPDATE INFO GAME ==========
+        function updateGameInfo() {
+            elements.currentLevel.textContent = currentLevel;
+            elements.questionNumber.textContent = questionNumber;
+            elements.score.textContent = score;
+            
+            // Update progress bar
+            const progress = (questionNumber - 1) * 20;
+            elements.progressFill.style.width = progress + '%';
+        }
+        
+        // ========== FUNGSI TAMPILKAN LAYAR AKHIR ==========
+        function showFinalScreen() {
+            // Sembunyikan layar game, tampilkan layar final
+            elements.gameScreen.style.display = 'none';
+            elements.finalScreen.style.display = 'block';
+            
+            // Update skor final
+            elements.finalScore.textContent = `${score}/5`;
+            
+            // Pesan motivasi berdasarkan skor
+            let message = '';
+            if (score === 5) {
+                message = '🏆 Sempurna! Kamu jenius banget! 🌟';
+                createConfetti();
+            } else if (score >= 4) {
+                message = '👏 Luar biasa! Hampir sempurna! 💪';
+            } else if (score >= 3) {
+                message = '😊 Bagus! Terus berlatih ya! 📚';
+            } else if (score >= 2) {
+                message = '🤔 Lumayan! Masih bisa lebih baik! 💡';
+            } else {
+                message = '😅 Jangan menyerah! Coba lagi yuk! 🎯';
+            }
+            
+            elements.motivationMessage.textContent = message;
+        }
+        
+        // ========== FUNGSI RESTART GAME ==========
+        function restartGame() {
+            // Reset tampilan
+            elements.gameScreen.style.display = 'block';
+            elements.finalScreen.style.display = 'none';
+            elements.startBtn.style.display = 'block';
+            elements.questionText.textContent = 'Siap untuk memulai petualangan tebak-tebakan?';
+            elements.answerInput.disabled = true;
+            elements.checkBtn.disabled = true;
+            elements.feedback.classList.remove('show');
+            elements.progressFill.style.width = '0%';
+            elements.timer.textContent = '10';
+            elements.timer.style.color = '#4ecdc4';
+            elements.timer.style.transform = 'scale(1)';
+            
+            // Reset variabel
+            currentLevel = 1;
+            questionNumber = 1;
+            score = 0;
+            usedQuestions = [];
+            gameActive = false;
+            
+            // Update info game
+            updateGameInfo();
+            
+            // Hentikan timer jika masih berjalan
+            if (timer) {
+                clearInterval(timer);
+            }
+        }
+        
+        // ========== EVENT LISTENERS ==========
+        
+        // Enter key untuk submit jawaban
+        elements.answerInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter' && gameActive) {
+                checkAnswer();
+            }
+        });
+        
+        // Inisialisasi game saat halaman dimuat
+        document.addEventListener('DOMContentLoaded', function() {
+            updateGameInfo();
+        });
+    </script>
+</body>
+</html>
